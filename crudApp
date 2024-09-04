@@ -1,0 +1,130 @@
+import mysql.connector
+import streamlit as st
+import pandas as pd
+# Database connection
+mydb = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="SKkaif@52",
+    database="project"
+)
+mycursor = mydb.cursor()
+
+# CSS for custom styling
+def local_css():
+    css = """
+    <style>
+    body {
+        font-family: 'Arial', sans-serif;
+    }
+    .stTitle {
+        color:#026b2a;
+        
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    .stSidebar{
+        background-color : #122630;
+        color : white;
+    }
+    .stSidebar selectbox {
+        background-color: #34495e;
+        box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.3);
+        color: #ecf0f1;
+    }
+    .stButton button {
+        background-color: #026b2a;
+        color: white;
+        font-weight: bold;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .stButton button:hover {
+        background-color: #02471d;
+        color : white;
+    }
+     .custom-label {
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+    .stMarkdown {
+        color: #e74c3c;
+        font-weight: bold;
+    }
+     .mystyle {
+            font-family: Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+            color : black;
+        }
+        .mystyle td, .mystyle th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .mystyle tr:nth-child(even){background-color: #f2f2f2; color : black}
+        .mystyle tr:hover {background-color: #ddd; color : black}
+        .mystyle th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: #026b2a;
+            color: white;
+        }
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
+def main():
+    local_css()  # Apply custom CSS
+    title = st.markdown("<h1 class = 'stTitle'>CRUD Operations using MySQL</h1>",unsafe_allow_html = True)
+    st.sidebar.markdown('<div class="custom-label">Choose Operation</div>', unsafe_allow_html=True)
+    
+    options = st.sidebar.selectbox("", ["Create", "Read", "Update", "Delete"])
+    if options == "Create":
+        st.subheader("Create Record")
+        first_name = st.text_input("Enter UserName")
+        email = st.text_input("Enter Email")
+        if st.button("Add"):
+            sql = "INSERT INTO firstapp (first_name, email) VALUES (%s, %s)"
+            val = (first_name, email)
+            mycursor.execute(sql, val)
+            mydb.commit()
+            st.success("Record Created Successfully")
+
+    elif options == "Read":
+        st.subheader("Read Records")
+        mycursor.execute("SELECT * FROM firstapp")
+        result = mycursor.fetchall()
+        df = pd.DataFrame(result, columns=['ID', 'First Name', 'Email'])
+        
+        # Display the DataFrame as a table
+        table_html = df.to_html(classes='mystyle', index=False)
+        st.markdown(table_html, unsafe_allow_html=True)
+    elif options == "Update":
+        st.subheader("Update Record")
+        id = st.number_input("Enter Id", min_value=1)
+        first_name = st.text_input("Enter New UserName")
+        email = st.text_input("Enter New Email")
+        if st.button("Update"):
+            sql = "UPDATE firstapp SET first_name = %s, email = %s WHERE id = %s"
+            val = (first_name, email, id)
+            mycursor.execute(sql, val)
+            mydb.commit()
+            st.success("Record Updated Successfully", icon="🚨")
+
+    elif options == "Delete":
+        st.subheader(":blue[Delete Record]")
+        id = st.number_input("Enter userId", min_value=1)
+        if st.button("Delete"):
+            sql = "DELETE FROM firstapp WHERE id = %s"
+            val = (id,)
+            mycursor.execute(sql, val)
+            mydb.commit()
+            st.success("Record Deleted Successfully")
+
+if __name__ == "__main__":
+    main()
